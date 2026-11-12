@@ -166,9 +166,9 @@ $tl_items = array(
 $tl_attrs = array( 'timelines' => array_map( function ( $t ) {
 	return array_merge( array( 'icon' => "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 0'/></svg>", 'isAddTinyEditor' => false ), $t );
 }, $tl_items ), 'type' => 'vertical', 'itemPosition' => 'right' );
-$aktionen = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Aktionen', 'post_name' => 'aktionen',
+$aktionen = wp_insert_post( wp_slash( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Aktionen', 'post_name' => 'aktionen',
 	'post_content' => get_comment_delimited_block_content( 'tlgb/b-timeline-block', $tl_attrs, "\n<div class=\"wp-block-tlgb-b-timeline-block\"></div>\n" )
-		. "\n\n<!-- wp:heading {\"level\":3} -->\n<h3 class=\"wp-block-heading\">Aktuell laufende Aktionen:</h3>\n<!-- /wp:heading -->\n\n<!-- wp:list -->\n<ul class=\"wp-block-list\"><!-- wp:list-item -->\n<li><strong>Teilnahme an den Vereinsfrühstücken der Stadt Lampertheim</strong></li>\n<!-- /wp:list-item --></ul>\n<!-- /wp:list -->" ) );
+		. "\n\n<!-- wp:heading {\"level\":3} -->\n<h3 class=\"wp-block-heading\">Aktuell laufende Aktionen:</h3>\n<!-- /wp:heading -->\n\n<!-- wp:list -->\n<ul class=\"wp-block-list\"><!-- wp:list-item -->\n<li><strong>Teilnahme an den Vereinsfrühstücken der Stadt Lampertheim</strong></li>\n<!-- /wp:list-item --></ul>\n<!-- /wp:list -->" ) ) );
 
 // Popup Maker: „Neuer Newsletter“ auf allen Seiten.
 $popup = wp_insert_post( array( 'post_type' => 'popup', 'post_status' => 'publish', 'post_title' => 'Newsletter', 'post_content' => "<!-- wp:paragraph -->\n<p><a href=\"https://example.org/newsletter.pdf\">Hier herunterladen!</a></p>\n<!-- /wp:paragraph -->" ) );
@@ -267,9 +267,9 @@ t_has( $fc, 'fvbb-overlap', 'Erster Abschnitt ragt ins Kopfbild' );
 t_has( $fc, '"perPage":3', 'Aktuelles: letzte 3 Beiträge' );
 t_has( $fc, 'Weitere Beiträge', 'Button „Weitere Beiträge“' );
 t_has( $fc, '>Unsere Ziele</h2>', 'Überschrift „Unsere Ziele“' );
-t_eq( substr_count( $fc, 'fvbb-points' ), 1, '„Wir …“-Punkte als Raster' );
+t_eq( substr_count( $fc, '"className":"fvbb-points"' ), 1, '„Wir …“-Punkte als Raster' );
 t_has( $fc, 'wp-image-', 'Bilder mit der Mediathek verknüpft' );
-t_eq( substr_count( $fc, 'is-style-fvbb-person' ), 6, 'Vorstand: 6 Personen-Karten' );
+t_eq( substr_count( $fc, '"className":"is-style-fvbb-person"' ), 6, 'Vorstand: 6 Personen-Karten' );
 t_has( $fc, 'mailto:info@fv-biedensand-baeder.de', 'Vorstand: E-Mail-Link übernommen' );
 t_not( $fc, 'twitter', 'Ausgeblendete Platzhalter-Symbole entfallen' );
 t_has( $fc, 'is-style-fvbb-sunbox', '„Kein gemeinnütziger Verein“ als Hinweis-Kasten' );
