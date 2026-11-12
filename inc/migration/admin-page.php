@@ -179,6 +179,9 @@ function fvbb_migration_page() {
 		<div class="card">
 			<h2><span class="step">3</span><?php esc_html_e( 'Alte Plugins deaktivieren', 'fvbb-core' ); ?></h2>
 			<p><?php esc_html_e( 'Diese Plugins werden nicht mehr gebraucht. Erst deaktivieren, Seite prüfen, dann unter „Plugins“ löschen.', 'fvbb-core' ); ?></p>
+			<?php if ( ! FVBB_Migration::replaced_installed() ) : ?>
+				<p class="ok"><?php esc_html_e( 'Keines der alten Plugins ist mehr installiert.', 'fvbb-core' ); ?></p>
+			<?php endif; ?>
 			<form method="post">
 				<?php wp_nonce_field( 'fvbb_migration' ); ?>
 				<table class="widefat striped"><tbody>
