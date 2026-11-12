@@ -92,6 +92,14 @@ async function dismiss(page) {
 
     // Startseite: Karten ragen ins Kopfbild, Personen-Karten in einer Reihe
     await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+    await loadAll(page);
+    const imgs = await page.evaluate(() => [...document.querySelectorAll('.entry-content img')].map(i => {
+      const cs = getComputedStyle(i); const r = i.getBoundingClientRect();
+      return { src: i.currentSrc.split('/').pop(), ok: i.complete && i.naturalWidth > 0, w: Math.round(r.width), h: Math.round(r.height), op: cs.opacity, vis: cs.visibility };
+    }));
+    const badImgs = imgs.filter(i => !i.ok || i.w < 10 || i.h < 10 || i.op === '0' || i.vis === 'hidden');
+    badImgs.length ? fail(`(${name}) Bilder nicht sichtbar: ${JSON.stringify(badImgs)}`) : ok(`(${name}) alle ${imgs.length} Bilder der Startseite sichtbar`);
+    if (name === 'desktop') { fs.writeFileSync(path.join(SHOTS, 'start.html'), await page.content()); }
     const m = await page.evaluate(() => {
       const hero = document.querySelector('.front-hero').getBoundingClientRect();
       const card = document.querySelector('.fvbb-overlap .is-style-fvbb-card');

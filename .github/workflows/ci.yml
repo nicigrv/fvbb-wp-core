@@ -75,7 +75,7 @@ jobs:
           git -C theme log -1 --format='Theme: %h %s'
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.3'
           tools: wp-cli
           extensions: mysqli, gd, zip
           coverage: none
