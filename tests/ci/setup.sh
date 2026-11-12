@@ -25,6 +25,8 @@ rsync -a --exclude .git --exclude node_modules "$PLUGIN_SRC/" wp-content/plugins
 rsync -a --exclude .git "$THEME_SRC/" wp-content/themes/fvbb/
 wp theme activate fvbb
 wp plugin activate fvbb-core
+# Contact Form 7 bleibt auf der Website (Kontaktformular auf der Startseite).
+wp plugin install contact-form-7 --activate || echo "Contact Form 7 konnte nicht installiert werden"
 wp core version --extra
 wp plugin list --fields=name,status,version
 wp theme list --fields=name,status,version

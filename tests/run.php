@@ -84,6 +84,11 @@ t_has( $sym, '<svg', 'Symbol als SVG' );
  * ====================================================================== */
 t_section( 'Alte Website nachbauen' );
 
+// Beispielinhalte von WordPress entfernen.
+foreach ( get_posts( array( 'post_type' => array( 'post', 'page' ), 'numberposts' => -1, 'post_status' => 'any' ) ) as $p ) {
+	wp_delete_post( $p->ID, true );
+}
+
 // Blog-Seite und Beiträge.
 $blog = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Blog', 'post_name' => 'blog' ) );
 update_option( 'page_for_posts', $blog );
@@ -141,13 +146,22 @@ update_option( 'show_on_front', 'page' );
 update_option( 'page_on_front', $front );
 t_ok( FVBB_Homepage_Converter::is_builder_content( get_post( $front )->post_content ), 'Startseite ist Baukasten-Inhalt' );
 
+// Kontaktformular (Contact Form 7 bleibt installiert) mit derselben Kennung wie auf der Website.
+if ( class_exists( 'WPCF7_ContactForm' ) ) {
+	$cf = WPCF7_ContactForm::get_template( array( 'title' => 'Kontaktformular 1' ) );
+	$cf->set_properties( array( 'form' => "<label> Dein Name\n    [text* your-name autocomplete:name] </label>\n\n<label> Deine E-Mail-Adresse\n    [email* your-email autocomplete:email] </label>\n\n<label> Deine Nachricht an uns\n    [textarea* your-message] </label>\n\n[submit \"Senden\"]" ) );
+	$cf_id = $cf->save();
+	update_post_meta( $cf_id, '_hash', 'c086e96' . substr( sha1( 'fvbb' ), 0, 33 ) );
+	t_ok( (bool) $cf_id, 'Contact Form 7: Kontaktformular angelegt' );
+}
+
 // Mitgliedsantrag (Ziel der Buttons).
 $antrag = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'Jetzt Mitglied werden!', 'post_name' => 'mitgliedsantrag',
 	'post_content' => "<!-- wp:buttons -->\n<div class=\"wp-block-buttons\"><!-- wp:button -->\n<div class=\"wp-block-button\"><a class=\"wp-block-button__link wp-element-button\" href=\"#\">Mitgliedsantrag herunterladen</a></div>\n<!-- /wp:button --></div>\n<!-- /wp:buttons -->\n\n<!-- wp:paragraph -->\n<p><strong>Nach dem Ausfüllen des Antrages kannst du ihn per E-Mail an <a href=\"mailto:info@example.org\">info@example.org</a> schicken.</strong></p>\n<!-- /wp:paragraph -->" ) );
 
 // Vorstand: TablePress-Tabelle (mit leerer Zeile und Fußzeile wie im Original).
 $tp_rows = array( array( 'Name', 'Postition' ), array( 'Person 1', '1. Vorsitzender' ), array( 'Person 2', '2. Vorsitzende' ), array( 'Person 3', 'Kassenverwalter' ), array( 'Person 4', 'Schriftführerin' ), array( '', '' ), array( 'Kontakt zum Vorstand: info@example.org', '' ) );
-$tp_post = wp_insert_post( array( 'post_type' => 'tablepress_table', 'post_status' => 'publish', 'post_title' => 'Vorstand', 'post_content' => wp_json_encode( $tp_rows ) ) );
+$tp_post = wp_insert_post( wp_slash( array( 'post_type' => 'tablepress_table', 'post_status' => 'publish', 'post_title' => 'Vorstand', 'post_content' => wp_json_encode( $tp_rows ) ) ) );
 update_post_meta( $tp_post, '_tablepress_table_options', wp_json_encode( array( 'table_head' => true, 'table_foot' => true, 'print_name' => false ) ) );
 update_post_meta( $tp_post, '_tablepress_table_visibility', wp_json_encode( array( 'rows' => array_fill( 0, 7, 1 ), 'columns' => array( 1, 1 ) ) ) );
 update_option( 'tablepress_tables', wp_json_encode( array( 'last_id' => 1, 'table_post' => array( '1' => $tp_post ) ) ) );
@@ -295,6 +309,7 @@ $vh = fvbb_table_render( $tables_now[0]->ID );
 t_has( $vh, '<tfoot>', 'Fußzeile übernommen' );
 t_eq( substr_count( $vh, '<tr' ), 6, 'Leere Zeile wird ausgeblendet' );
 t_has( $vh, 'Kassenverwalter', 'Inhalt übernommen' );
+t_has( $vh, 'Schriftführerin', 'Umlaute übernommen' );
 $editor[] = $vorstand;
 $urls[]   = '/unser-vorstand/';
 

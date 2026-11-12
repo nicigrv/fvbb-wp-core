@@ -14,6 +14,26 @@ const ok = (m) => console.log('  ok   ' + m);
 const fail = (m) => { console.log('  FAIL ' + m); failed++; };
 const fileFor = (u, name) => (u.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '') || 'start') + '-' + name + '.png';
 
+// Einmal ganz nach unten scrollen, damit alle Bilder (loading="lazy") geladen sind
+async function loadAll(page) {
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); }
+    window.scrollTo(0, 0);
+  });
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(300);
+}
+
+// Willkommens-Fenster im Editor abschalten
+async function noWelcome(page) {
+  await page.evaluate(() => {
+    try { wp.data.dispatch('core/preferences').set('core/edit-post', 'welcomeGuide', false); } catch (e) {}
+    try { wp.data.dispatch('core/preferences').set('core', 'enableChoosePatternModal', false); } catch (e) {}
+  });
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.waitForTimeout(300);
+}
+
 async function dismiss(page) {
   // Cookie-Banner: „Nur notwendige“, danach den Hinweis schließen (damit nichts die Screenshots verdeckt)
   const nec = page.locator('#fvbb-consent button', { hasText: 'Nur notwendige' });
@@ -63,6 +83,7 @@ async function dismiss(page) {
       errors.length = 0;
       await page.goto(BASE + u, { waitUntil: 'networkidle' });
       if (first) { await dismiss(page); await page.reload({ waitUntil: 'networkidle' }); first = false; }
+      await loadAll(page);
       await page.screenshot({ path: path.join(SHOTS, fileFor(u, name)), fullPage: true });
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       if (errors.length) fail(`${u} (${name}): JS-Fehler: ${errors.join(' | ')}`); else ok(`${u} (${name}) ohne JS-Fehler`);
@@ -102,6 +123,7 @@ async function dismiss(page) {
     for (const id of ids) {
       await page.goto(`${BASE}/wp-admin/post.php?post=${id}&action=edit`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.wp && wp.data && wp.data.select('core/editor') && wp.data.select('core/editor').getCurrentPostId(), null, { timeout: 60000 });
+      await noWelcome(page);
       await page.waitForTimeout(2000);
       const res = await page.evaluate(() => {
         const bad = []; let total = 0;
@@ -118,6 +140,7 @@ async function dismiss(page) {
       const aid = ids[2];
       await page.goto(`${BASE}/wp-admin/post.php?post=${aid}&action=edit`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.wp && wp.data && wp.data.select('core/block-editor').getBlocks().length, null, { timeout: 60000 });
+      await noWelcome(page);
       await page.waitForTimeout(1500);
       const canvas = page.frameLocator('iframe[name="editor-canvas"]');
       const hasFrame = await page.locator('iframe[name="editor-canvas"]').count();
