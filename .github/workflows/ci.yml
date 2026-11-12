@@ -1,0 +1,169 @@
+# Tests & Release
+#
+# Bei jedem Push (alle Branches) und bei Pull Requests:
+#   1. PHP-Syntax mit PHP 7.4, 8.1 und 8.3
+#   2. Frische WordPress-Installation (+ MySQL) mit Theme und Plugin, Testinhalte anlegen und
+#      alle Funktionen prüfen (tests/run.php), Seiten über HTTP abrufen,
+#      Browser-Tests (Block-Editor, Bedienung, Screenshots als Artefakt)
+# Nur auf "main" und nur wenn alles grün ist: neue Versionsnummer → GitHub-Release mit ZIP,
+# WordPress zeigt das Update danach unter Dashboard → Aktualisierungen an.
+name: Tests & Release
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SLUG: fvbb-core
+  MAIN_FILE: fvbb-core.php
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }} – Syntax
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.1', '8.3']
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: php -l
+        run: |
+          errors=$(find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l 2>&1 | grep -v '^No syntax errors' || true)
+          if [ -n "$errors" ]; then echo "$errors"; exit 1; fi
+          echo "Alle PHP-Dateien fehlerfrei."
+
+  wordpress:
+    name: WordPress-Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      WP_DIR: /tmp/wp
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: plugin
+      - name: Theme holen (gleicher Branch, sonst main)
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          git clone --depth 1 -b "$BRANCH" https://github.com/nicigrv/fvbb-wp-theme theme 2>/dev/null \
+            || git clone --depth 1 https://github.com/nicigrv/fvbb-wp-theme theme
+          git -C theme log -1 --format='Theme: %h %s'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: wp-cli
+          extensions: mysqli, gd, zip
+          coverage: none
+
+      - name: WordPress installieren
+        run: plugin/tests/ci/setup.sh plugin theme
+
+      - name: Funktionstests (tests/run.php)
+        run: |
+          cd "$WP_DIR"
+          wp eval-file wp-content/plugins/fvbb-core/tests/run.php
+          if grep -E 'PHP (Fatal|Parse|Warning|Notice)' /tmp/wp-debug.log; then echo "PHP-Fehler oder Warnungen während der Tests"; exit 1; fi
+
+      - name: Webserver starten
+        run: |
+          cd "$WP_DIR"
+          nohup env WP_DIR="$WP_DIR" php -S 127.0.0.1:8080 wp-content/plugins/fvbb-core/tests/ci/router.php > /tmp/php-server.log 2>&1 &
+          for i in $(seq 1 30); do curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 1; done
+
+      - name: Seiten über HTTP prüfen
+        run: "$WP_DIR/wp-content/plugins/fvbb-core/tests/ci/http.sh"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Browser-Tests (Playwright)
+        run: |
+          cd "$WP_DIR/wp-content/plugins/fvbb-core/tests/e2e"
+          npm install --no-audit --no-fund --silent
+          npx playwright install --with-deps chromium > /dev/null
+          node e2e.js
+
+      - name: Screenshots & Protokolle hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-und-protokolle
+          path: |
+            /tmp/wp/wp-content/plugins/fvbb-core/tests/e2e/shots/
+            /tmp/wp-debug.log
+            /tmp/php-server.log
+          if-no-files-found: ignore
+
+  release:
+    name: Release
+    needs: wordpress
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Version lesen
+        id: v
+        run: |
+          VERSION=$(grep -m1 -E '^[ *]*Version:' "$MAIN_FILE" | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r[:space:]')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Version $VERSION ist schon veröffentlicht – nichts zu tun."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Neue Version $VERSION wird veröffentlicht."
+          fi
+
+      - name: ZIP bauen
+        if: steps.v.outputs.exists == 'false'
+        run: |
+          git archive --format=zip --prefix="$SLUG/" -o "$SLUG.zip" HEAD
+          unzip -l "$SLUG.zip" | tail -1
+
+      - name: Änderungen seit der letzten Version
+        if: steps.v.outputs.exists == 'false'
+        run: |
+          PREV=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+          if [ -n "$PREV" ]; then RANGE="$PREV..HEAD"; else RANGE="HEAD"; fi
+          git log --no-merges --pretty='- %s' $RANGE | grep -v -i -E '^- (release-workflow|tests?:|ci:)' > notes.md || true
+          [ -s notes.md ] || echo "- Version ${{ steps.v.outputs.version }}" > notes.md
+          cat notes.md
+
+      - name: Release anlegen
+        if: steps.v.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ steps.v.outputs.tag }}" "$SLUG.zip" --target "$GITHUB_SHA" --title "${{ steps.v.outputs.tag }}" --notes-file notes.md

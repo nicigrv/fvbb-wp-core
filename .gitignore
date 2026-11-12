@@ -1,0 +1,7 @@
+tests/e2e/node_modules/
+tests/e2e/shots/
+tests/e2e/package-lock.json
+tests/ci/urls.txt
+tests/ci/editor-ids.txt
+tests/ci/redirect.txt
+tests/ci/test.pdf

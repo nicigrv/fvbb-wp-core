@@ -1,0 +1,8 @@
+{
+  "name": "fvbb-e2e",
+  "private": true,
+  "description": "Browser-Tests (Playwright) für den Förderverein – laufen auf GitHub Actions",
+  "dependencies": {
+    "playwright": "1.55.0"
+  }
+}

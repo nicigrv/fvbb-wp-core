@@ -1,0 +1,41 @@
+/* Förderverein – Zeitleiste (Aktionen) */
+.fvbb-timeline {
+	--tl-line: var(--sky, #60B0D8);
+	--tl-dot: var(--sun, #F8B000);
+	--tl-navy: var(--navy, #0A3A6B);
+	--tl-primary: var(--primary, #0058A8);
+	--tl-line-soft: var(--line, #DAE6F0);
+	margin-block: 1.5rem 2.5rem;
+}
+.fvbb-timeline__year {
+	display: inline-block; margin: 2rem 0 1rem !important; padding: .3rem 1rem;
+	background: var(--tl-primary); color: #fff !important; border-radius: 999px;
+	font-size: 1.05rem !important; line-height: 1.4; letter-spacing: .02em;
+}
+.fvbb-timeline__year:first-child { margin-top: 0 !important; }
+.fvbb-timeline__list { list-style: none; margin: 0 0 0 .6rem; padding: 0 0 0 1.6rem; border-left: 3px solid var(--tl-line); }
+.fvbb-timeline__item { position: relative; margin: 0 0 1.25rem; padding: 0; }
+.fvbb-timeline__item::before {
+	content: ""; position: absolute; left: calc(-1.6rem - 10px); top: .3rem; width: 17px; height: 17px;
+	border-radius: 999px; background: var(--tl-dot); box-shadow: 0 0 0 4px #fff, 0 0 0 5px var(--tl-line);
+}
+.fvbb-timeline__date { margin: 0 0 .4rem !important; font-weight: 800; color: var(--tl-navy); font-size: .98rem; }
+.fvbb-timeline__card {
+	background: #fff; border: 1px solid var(--tl-line-soft); border-radius: 16px; padding: .9rem 1.15rem;
+	box-shadow: 0 1px 2px rgba(7, 42, 79, .05), 0 6px 18px rgba(7, 42, 79, .05);
+}
+.fvbb-timeline__card p { margin: 0 0 .6rem !important; line-height: 1.65; }
+.fvbb-timeline__card p:last-child { margin-bottom: 0 !important; }
+.fvbb-timeline__title { margin: 0 0 .35rem !important; font-size: 1.05rem !important; color: var(--tl-navy); }
+@media (min-width: 782px) {
+	.fvbb-timeline__item { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+	.fvbb-timeline__date { margin: .15rem 0 0 !important; text-align: left; }
+}
+
+/* Editor */
+.fvbb-timeline-editor { border: 1px solid #dcdcde; border-radius: 8px; padding: 12px; background: #fff; }
+.fvbb-te-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.fvbb-te-item { border: 1px solid #e0e0e0; border-left: 4px solid #F8B000; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: #fafcff; }
+.fvbb-te-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 10px; }
+.fvbb-te-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; }
+.fvbb-te-empty { color: #646970; }

@@ -1,0 +1,6 @@
+# Nicht in die Release-ZIP übernehmen
+/.github        export-ignore
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/README.md      export-ignore
+/tests          export-ignore

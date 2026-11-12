@@ -1,0 +1,32 @@
+/* Förderverein – Tabellen-Editor */
+.fvbb-te__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 0 10px; position: sticky; top: 32px; background: #fff; z-index: 5; }
+.fvbb-te__sep { width: 1px; height: 24px; background: #dcdcde; margin: 0 4px; }
+.fvbb-te__size { margin-left: auto; color: #646970; font-size: 12px; }
+.fvbb-te__scroll { overflow: auto; max-height: 72vh; border: 1px solid #dcdcde; border-radius: 6px; }
+.fvbb-te__grid { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+.fvbb-te__grid th, .fvbb-te__grid td { border-right: 1px solid #e2e4e7; border-bottom: 1px solid #e2e4e7; padding: 0; vertical-align: top; background: #fff; }
+.fvbb-te__grid thead th { position: sticky; top: 0; z-index: 3; background: #f6f7f7; }
+.fvbb-te__grid .rowhead { position: sticky; left: 0; z-index: 2; background: #f6f7f7; width: 44px; }
+.fvbb-te__grid .corner { position: sticky; left: 0; top: 0; z-index: 4; background: #f0f0f1; width: 44px; }
+.fvbb-te__grid .hbtn { width: 100%; min-width: 44px; height: 30px; border: 0; background: none; cursor: pointer; color: #50575e; font-weight: 600; font-size: 12px; }
+.fvbb-te__grid .hbtn:hover, .fvbb-te__grid .hbtn:focus { background: #e3f0fa; color: #0058A8; outline: none; }
+.fvbb-te__grid textarea {
+	display: block; width: 100%; min-width: 150px; min-height: 34px; border: 0; border-radius: 0; resize: vertical;
+	padding: 7px 8px; font-size: 13px; line-height: 1.4; background: transparent; box-shadow: none; overflow: hidden;
+}
+.fvbb-te__grid textarea:focus { box-shadow: inset 0 0 0 2px #0058A8; background: #fff; position: relative; z-index: 1; }
+.fvbb-te__grid tr.is-head td { background: #0A3A6B; }
+.fvbb-te__grid tr.is-head textarea { color: #fff; font-weight: 600; }
+.fvbb-te__grid tr.is-head textarea:focus { background: #0A3A6B; }
+.fvbb-te__grid tr.is-foot td { background: #EEF6FB; }
+.fvbb-te__grid tr.is-hidden td, .fvbb-te__grid td.is-hidden { background: repeating-linear-gradient(-45deg, #f6f7f7 0 6px, #fff 6px 12px) !important; }
+.fvbb-te__grid tr.is-hidden textarea, .fvbb-te__grid td.is-hidden textarea { color: #8c8f94 !important; }
+.fvbb-te__grid tr.is-hidden .rowhead .hbtn, .fvbb-te__grid th.colhead.is-hidden .hbtn { text-decoration: line-through; color: #8c8f94; }
+.fvbb-te__help { color: #646970; font-size: 12px; margin: 10px 0 0; max-width: 900px; }
+.fvbb-te__menu { position: absolute; z-index: 100000; background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.15); padding: 4px; min-width: 220px; }
+.fvbb-te__menu[hidden] { display: none; }
+.fvbb-te__menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.fvbb-te__menu button:hover, .fvbb-te__menu button:focus { background: #f0f6fc; color: #0058A8; outline: none; }
+.fvbb-te__menu button.is-danger { color: #b32d2e; }
+#fvbb_table_editor .inside { margin: 0; padding: 0 12px 12px; }
+@media (max-width: 782px) { .fvbb-te__toolbar { top: 46px; } }
