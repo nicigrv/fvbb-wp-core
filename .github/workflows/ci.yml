@@ -29,7 +29,7 @@ concurrency:
 jobs:
   lint:
     name: PHP ${{ matrix.php }} – Syntax
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -49,7 +49,7 @@ jobs:
   wordpress:
     name: WordPress-Tests
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       mysql:
         image: mysql:8.0
@@ -124,7 +124,7 @@ jobs:
     name: Release
     needs: wordpress
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     concurrency:
       group: release
       cancel-in-progress: false
