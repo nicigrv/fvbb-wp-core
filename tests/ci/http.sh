@@ -35,6 +35,8 @@ has / 'An der Sandbeune 21b' && ok "Footer-Spalten (Widgets) übernommen" || fai
 has / 'mulish-latin-wght-normal.woff2' && ok "Schrift lokal" || fail "Schrift nicht lokal"
 has / 'fonts.googleapis.com' && fail "Google Fonts werden geladen" || ok "keine Google Fonts"
 has /unser-vorstand/ '<tfoot>' && ok "Vorstand: Tabelle mit Fußzeile" || fail "Vorstand: Tabelle fehlt"
+has /blog/ '>Uncategorized<' && fail "Standardkategorie „Uncategorized“ wird angezeigt" || ok "Standardkategorie ausgeblendet"
+has / 'Schwimmsport in Lampertheim' && fail "Ausgeblendeter Untertitel wird angezeigt" || ok "Untertitel wie bisher ausgeblendet"
 has /aktionen/ 'fvbb-timeline__item' && ok "Aktionen: Zeitleiste" || fail "Aktionen: Zeitleiste fehlt"
 has /unser-vorstand/ 'hero-media__img' && ok "Unterseiten mit Kopfbild" || fail "Unterseite ohne Kopfbild"
 

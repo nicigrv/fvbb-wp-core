@@ -160,7 +160,7 @@ $antrag = wp_insert_post( array( 'post_type' => 'page', 'post_status' => 'publis
 	'post_content' => "<!-- wp:buttons -->\n<div class=\"wp-block-buttons\"><!-- wp:button -->\n<div class=\"wp-block-button\"><a class=\"wp-block-button__link wp-element-button\" href=\"#\">Mitgliedsantrag herunterladen</a></div>\n<!-- /wp:button --></div>\n<!-- /wp:buttons -->\n\n<!-- wp:paragraph -->\n<p><strong>Nach dem Ausfüllen des Antrages kannst du ihn per E-Mail an <a href=\"mailto:info@example.org\">info@example.org</a> schicken.</strong></p>\n<!-- /wp:paragraph -->" ) );
 
 // Vorstand: TablePress-Tabelle (mit leerer Zeile und Fußzeile wie im Original).
-$tp_rows = array( array( 'Name', 'Postition' ), array( 'Person 1', '1. Vorsitzender' ), array( 'Person 2', '2. Vorsitzende' ), array( 'Person 3', 'Kassenverwalter' ), array( 'Person 4', 'Schriftführerin' ), array( '', '' ), array( 'Kontakt zum Vorstand: info@example.org', '' ) );
+$tp_rows = array( array( 'Name', 'Postition' ), array( 'Person 1', '1. Vorsitzender' ), array( 'Person 2', '2. Vorsitzende' ), array( 'Person 3', 'Kassenverwalter' ), array( 'Person 4', 'Schriftführerin' ), array( '', '' ), array( 'Kontakt zum Vorstand: info@example.org', '#colspan#' ) );
 $tp_post = wp_insert_post( wp_slash( array( 'post_type' => 'tablepress_table', 'post_status' => 'publish', 'post_title' => 'Vorstand', 'post_content' => wp_json_encode( $tp_rows ) ) ) );
 update_post_meta( $tp_post, '_tablepress_table_options', wp_json_encode( array( 'table_head' => true, 'table_foot' => true, 'print_name' => false ) ) );
 update_post_meta( $tp_post, '_tablepress_table_visibility', wp_json_encode( array( 'rows' => array_fill( 0, 7, 1 ), 'columns' => array( 1, 1 ) ) ) );
@@ -197,6 +197,7 @@ $inner = t_image( '2025/01/cropped-WhatsApp-Bild-2025-01-09-um-12.01.37_93a0da72
 update_option( 'theme_mods_empowerwp', array(
 	'custom_logo'                          => $logo,
 	'header_title'                         => 'Förderverein Biedensand Bäder Lampertheim e.V.',
+	'header_subtitle'                      => 'Wir fördern den Schwimmsport in Lampertheim',
 	'header_content_buttons'               => array( array( 'label' => 'Der FV auf Instagram', 'url' => 'https://www.instagram.com/fv_biedensand_baeder', 'target' => '_blank' ) ),
 	'header_front_page_image'              => str_replace( 'https://', 'http://', wp_get_attachment_url( $hero ) ),
 	'header_image'                         => wp_get_attachment_url( $inner ),
@@ -310,6 +311,8 @@ t_has( $vh, '<tfoot>', 'Fußzeile übernommen' );
 t_eq( substr_count( $vh, '<tr' ), 6, 'Leere Zeile wird ausgeblendet' );
 t_has( $vh, 'Kassenverwalter', 'Inhalt übernommen' );
 t_has( $vh, 'Schriftführerin', 'Umlaute übernommen' );
+t_not( $vh, '#colspan#', 'Verbundene Zellen (#colspan#) werden nicht als Text angezeigt' );
+t_has( $vh, '<td colspan="2">Kontakt zum Vorstand', 'Fußzeile über beide Spalten' );
 $editor[] = $vorstand;
 $urls[]   = '/unser-vorstand/';
 
@@ -349,6 +352,7 @@ t_section( 'Theme: alte Einstellungen' );
 t_eq( (int) get_theme_mod( 'custom_logo' ), $logo, 'Logo aus EmpowerWP übernommen' );
 t_eq( fvbb_opt( 'hero_title' ), 'Förderverein Biedensand Bäder Lampertheim e.V.', 'Titel im Kopfbild übernommen' );
 t_eq( fvbb_opt( 'hero_btn1_label' ), 'Der FV auf Instagram', 'Instagram-Button übernommen' );
+t_eq( fvbb_opt( 'hero_text' ), '', 'Ausgeblendeter Untertitel aus Mesmerize bleibt ausgeblendet' );
 t_eq( fvbb_header_image_ids( true ), array( $hero ), 'Kopfbild der Startseite (http-Adresse) gefunden' );
 t_eq( fvbb_header_image_ids( false ), array( $inner ), 'Kopfbild der Unterseiten übernommen' );
 t_eq( fvbb_opt( 'social_1' ), 'mailto:info@fv-biedensand-baeder.de', 'Mail-Symbol im Footer übernommen' );
@@ -360,6 +364,7 @@ t_eq( substr_count( $nav, 'menu-item-cta' ), 1, 'Nur ein Menüpunkt hervorgehobe
 $GLOBALS['wp_query']     = new WP_Query( array( 'page_id' => $front ) );
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
 t_eq( fvbb_first_section_color(), '', 'Welle unter dem Kopfbild bleibt weiß (Karten ragen hinein)' );
+t_ok( in_array( 'has-fvbb-overlap', get_body_class(), true ), 'Kopfbild bekommt unten Platz für die Karten' );
 wp_reset_query();
 foreach ( $pages as $slug => $pid ) {
 	$urls[] = '/' . $slug . '/';

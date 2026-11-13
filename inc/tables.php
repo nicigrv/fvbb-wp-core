@@ -253,33 +253,70 @@ function fvbb_table_render( $id, array $args = array() ) {
 	$cell_html = function ( $c ) {
 		return nl2br( wp_kses_post( $c ), false );
 	};
-	$build = function ( array $row, $tag ) use ( $cell_html ) {
+
+	// Verbundene Zellen wie in TablePress: "#colspan#" / "#rowspan#" erweitern die Zelle links bzw. darüber.
+	$span = array();
+	foreach ( $visible as $ri => $row ) {
+		foreach ( $row as $ci => $c ) {
+			$mark = trim( (string) $c );
+			if ( '#colspan#' === $mark ) {
+				for ( $k = $ci - 1; $k >= 0; $k-- ) {
+					if ( isset( $span[ $ri ][ $k ] ) && $span[ $ri ][ $k ] ) {
+						$span[ $ri ][ $k ][0]++;
+						break;
+					}
+				}
+				$span[ $ri ][ $ci ] = null;
+			} elseif ( '#rowspan#' === $mark ) {
+				for ( $k = $ri - 1; $k >= 0; $k-- ) {
+					if ( isset( $span[ $k ][ $ci ] ) && $span[ $k ][ $ci ] ) {
+						$span[ $k ][ $ci ][1]++;
+						break;
+					}
+				}
+				$span[ $ri ][ $ci ] = null;
+			} elseif ( '#span#' === $mark ) {
+				$span[ $ri ][ $ci ] = null;
+			} else {
+				$span[ $ri ][ $ci ] = array( 1, 1 );
+			}
+		}
+	}
+
+	$build = function ( $ri, $tag ) use ( $cell_html, $visible, &$span ) {
+		$row = $visible[ $ri ];
 		// Zwischenüberschrift: nur die erste Zelle gefüllt (z. B. "Oktober")
 		$filled = 0;
 		foreach ( $row as $c ) {
-			if ( '' !== trim( wp_strip_all_tags( (string) $c ) ) ) {
+			if ( '' !== trim( wp_strip_all_tags( (string) $c ) ) && '#' !== substr( trim( (string) $c ), 0, 1 ) ) {
 				$filled++;
 			}
 		}
 		$group = 'td' === $tag && count( $row ) > 2 && 1 === $filled && '' !== trim( wp_strip_all_tags( (string) $row[0] ) );
 		$h     = $group ? '<tr class="is-group-row">' : '<tr>';
-		foreach ( $row as $c ) {
-			$h .= "<{$tag}>" . $cell_html( $c ) . "</{$tag}>";
+		foreach ( $row as $ci => $c ) {
+			$sp = $span[ $ri ][ $ci ] ?? array( 1, 1 );
+			if ( null === $sp ) {
+				continue;
+			}
+			$attr = ( $sp[0] > 1 ? ' colspan="' . (int) $sp[0] . '"' : '' ) . ( $sp[1] > 1 ? ' rowspan="' . (int) $sp[1] . '"' : '' );
+			$h   .= "<{$tag}{$attr}>" . $cell_html( $c ) . "</{$tag}>";
 		}
 		return $h . '</tr>';
 	};
 
+	$idx  = array_keys( $visible );
 	$html = '<table>';
-	if ( $d['head'] && count( $visible ) > 1 ) {
-		$html .= '<thead>' . $build( array_shift( $visible ), 'th' ) . '</thead>';
+	if ( $d['head'] && count( $idx ) > 1 ) {
+		$html .= '<thead>' . $build( array_shift( $idx ), 'th' ) . '</thead>';
 	}
-	$foot = ( $d['foot'] && count( $visible ) > 1 ) ? array_pop( $visible ) : null;
+	$foot  = ( $d['foot'] && count( $idx ) > 1 ) ? array_pop( $idx ) : null;
 	$html .= '<tbody>';
-	foreach ( $visible as $r ) {
-		$html .= $build( $r, 'td' );
+	foreach ( $idx as $ri ) {
+		$html .= $build( $ri, 'td' );
 	}
 	$html .= '</tbody>';
-	if ( $foot ) {
+	if ( null !== $foot ) {
 		$html .= '<tfoot>' . $build( $foot, 'td' ) . '</tfoot>';
 	}
 	$html .= '</table>';

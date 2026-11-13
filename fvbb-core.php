@@ -3,7 +3,7 @@
  * Plugin Name:       Förderverein Funktionen
  * Plugin URI:        https://fv-biedensand-baeder.de/
  * Description:       Funktionen für den Förderverein Biedensand Bäder Lampertheim e.V.: Hinweis-Popup (z. B. neuer Newsletter), Cookie-Banner, Tabellen-Verwaltung, Zeitleiste für Aktionen, Symbole, Umstellung vom alten Theme. Ersetzt Popup Maker, CookieYes, TablePress und Timeline Block.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.6
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FVBB_CORE_VERSION', '1.0.0' );
+define( 'FVBB_CORE_VERSION', '1.0.1' );
 define( 'FVBB_CORE_FILE', __FILE__ );
 define( 'FVBB_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FVBB_CORE_URL', plugin_dir_url( __FILE__ ) );
