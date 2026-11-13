@@ -295,7 +295,8 @@ function fvbb_table_render( $id, array $args = array() ) {
 		$group = 'td' === $tag && count( $row ) > 2 && 1 === $filled && '' !== trim( wp_strip_all_tags( (string) $row[0] ) );
 		$h     = $group ? '<tr class="is-group-row">' : '<tr>';
 		foreach ( $row as $ci => $c ) {
-			$sp = $span[ $ri ][ $ci ] ?? array( 1, 1 );
+			// Achtung: "??" würde null (= Zelle gehört zur Nachbarzelle) wie "fehlt" behandeln.
+			$sp = isset( $span[ $ri ] ) && array_key_exists( $ci, $span[ $ri ] ) ? $span[ $ri ][ $ci ] : array( 1, 1 );
 			if ( null === $sp ) {
 				continue;
 			}
